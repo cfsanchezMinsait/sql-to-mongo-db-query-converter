@@ -189,12 +189,16 @@ public class QueryConverter {
         }
 
         if (sqlCommandInfoHolder.getWhereClause()!=null) {
-            WhereCauseProcessor whereCauseProcessor = new WhereCauseProcessor(defaultFieldType,
-                    fieldNameToFieldTypeMapping);
-            mongoDBQueryHolder.setQuery((Document) whereCauseProcessor
-                    .parseExpression(new Document(), sqlCommandInfoHolder.getWhereClause(), null));
+            WhereCauseProcessor whereCauseProcessor = new WhereCauseProcessor(defaultFieldType, fieldNameToFieldTypeMapping);
+            mongoDBQueryHolder.setQuery((Document) whereCauseProcessor.parseExpression(new Document(), sqlCommandInfoHolder.getWhereClause(), null));
         }
         mongoDBQueryHolder.setLimit(sqlCommandInfoHolder.getLimit());
+
+        if (sqlCommandInfoHolder.getHavingClause()!=null) {
+            WhereCauseProcessor havingClauseProcessor = new WhereCauseProcessor(defaultFieldType, fieldNameToFieldTypeMapping);
+            mongoDBQueryHolder.setHaving((Document) havingClauseProcessor.parseExpression(new Document(), sqlCommandInfoHolder.getHavingClause(), null));
+        }
+
         return mongoDBQueryHolder;
     }
 
@@ -339,6 +343,9 @@ public class QueryConverter {
             List<Document> documents = new ArrayList<>();
             documents.add(new Document("$match",mongoDBQueryHolder.getQuery()));
             documents.add(new Document("$group",mongoDBQueryHolder.getProjection()));
+            if (mongoDBQueryHolder.getHaving() != null && mongoDBQueryHolder.getHaving().size() > 0 ){
+                documents.add(new Document("$match",mongoDBQueryHolder.getHaving()));
+            }
 
             if (mongoDBQueryHolder.getSort()!=null && mongoDBQueryHolder.getSort().size() > 0) {
                 documents.add(new Document("$sort",mongoDBQueryHolder.getSort()));
@@ -351,7 +358,13 @@ public class QueryConverter {
             IOUtils.write(Joiner.on(",").join(Lists.transform(documents, new com.google.common.base.Function<Document, String>() {
                 @Override
                 public String apply(Document document) {
+                    //This does not work because it puts double quotes to BSON functions such as NumberLong(n)
                     return prettyPrintJson(document.toJson());
+                    
+                    //JsonMode.STRICT does not work well for queries, it works well for inserts.                    
+                    //JsonWriterSettings settings = new JsonWriterSettings(JsonMode.SHELL);
+                    //This works well
+                    //return document.toJson(settings);
                 }
             })),outputStream);
             IOUtils.write("]", outputStream);
@@ -429,6 +442,9 @@ public class QueryConverter {
                     documents.add(new Document("$match", mongoDBQueryHolder.getQuery()));
                 }
                 documents.add(new Document("$group", mongoDBQueryHolder.getProjection()));
+                if (mongoDBQueryHolder.getHaving() != null && mongoDBQueryHolder.getHaving().size() > 0 ){
+                    documents.add(new Document("$match",mongoDBQueryHolder.getHaving()));
+                }
                 if (mongoDBQueryHolder.getSort() != null && mongoDBQueryHolder.getSort().size() > 0) {
                     documents.add(new Document("$sort", mongoDBQueryHolder.getSort()));
                 }

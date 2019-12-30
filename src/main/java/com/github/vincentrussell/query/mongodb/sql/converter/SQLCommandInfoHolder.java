@@ -23,9 +23,11 @@ public class SQLCommandInfoHolder {
     private final List<Join> joins;
     private final List<String> groupBys;
     private final List<OrderByElement> orderByElements;
+    private final Expression havingClause;
 
     public SQLCommandInfoHolder(SQLCommandType sqlCommandType, Expression whereClause,
-                                boolean isDistinct, boolean isCountAll, String table, long limit, List<SelectItem> selectItems, List<Join> joins, List<String> groupBys, List<OrderByElement> orderByElements) {
+                                boolean isDistinct, boolean isCountAll, String table, long limit, List<SelectItem> selectItems, List<Join> joins, 
+                                List<String> groupBys, List<OrderByElement> orderByElements, Expression havingClause) {
         this.sqlCommandType = sqlCommandType;
         this.whereClause = whereClause;
         this.isDistinct = isDistinct;
@@ -36,6 +38,7 @@ public class SQLCommandInfoHolder {
         this.joins = joins;
         this.groupBys = groupBys;
         this.orderByElements = orderByElements;
+        this.havingClause = havingClause;
     }
 
     public boolean isDistinct() {
@@ -78,6 +81,10 @@ public class SQLCommandInfoHolder {
         return sqlCommandType;
     }
 
+    public Expression getHavingClause() {
+		return havingClause;
+	}
+
     public static class Builder {
         private final FieldType defaultFieldType;
         private final Map<String, FieldType> fieldNameToFieldTypeMapping;
@@ -91,6 +98,7 @@ public class SQLCommandInfoHolder {
         private List<Join> joins = new ArrayList<>();
         private List<String> groupBys = new ArrayList<>();
         private List<OrderByElement> orderByElements1 = new ArrayList<>();
+        private Expression havingClause;
 
 
         private Builder(FieldType defaultFieldType, Map<String, FieldType> fieldNameToFieldTypeMapping){
@@ -116,6 +124,7 @@ public class SQLCommandInfoHolder {
                 joins = plainSelect.getJoins();
                 groupBys = SqlUtils.getGroupByColumnReferences(plainSelect);
                 SqlUtils.isTrue(plainSelect.getFromItem() != null, "could not find table to query.  Only one simple table name is supported.");
+                havingClause = plainSelect.getHaving();
             } else if (Delete.class.isAssignableFrom(statement.getClass())) {
                 sqlCommandType = SQLCommandType.DELETE;
                 Delete delete = (Delete)statement;
@@ -128,7 +137,7 @@ public class SQLCommandInfoHolder {
 
         public SQLCommandInfoHolder build() {
             return new SQLCommandInfoHolder(sqlCommandType, whereClause,
-                    isDistinct, isCountAll, table, limit, selectItems, joins, groupBys, orderByElements1);
+                    isDistinct, isCountAll, table, limit, selectItems, joins, groupBys, orderByElements1, havingClause);
         }
 
         public static Builder create(FieldType defaultFieldType, Map<String, FieldType> fieldNameToFieldTypeMapping) {

@@ -17,6 +17,7 @@ public class MongoDBQueryHolder {
     private boolean countAll = false;
     private List<String> groupBys = new ArrayList<>();
     private long limit = -1;
+    private Document having = new Document();
 
     /**
      * Pojo to hold the MongoDB data
@@ -106,5 +107,14 @@ public class MongoDBQueryHolder {
 
     public SQLCommandType getSqlCommandType() {
         return sqlCommandType;
+    }
+
+	public Document getHaving() {
+		return having;
+    }
+    
+    public void setHaving(Document having) {
+        notNull(having, "having is null");
+        this.having = having;
     }
 }

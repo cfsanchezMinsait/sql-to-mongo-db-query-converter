@@ -590,6 +590,24 @@ public class QueryConverterTest {
     }
 
     @Test
+    public void testCountAllGroupByWithHaving() throws ParseException, IOException {
+        QueryConverter queryConverter = new QueryConverter("SELECT agent_code,   \n" +
+                "COUNT (*)   \n" +
+                "FROM orders \n " +
+                "WHERE agent_code LIKE 'AW_%'\n" +
+                "GROUP BY agent_code \n" +
+                "HAVING count > 1;"
+                );
+        MongoDBQueryHolder mongoDBQueryHolder = queryConverter.getMongoQuery();
+        assertEquals(2,mongoDBQueryHolder.getProjection().size());
+        assertEquals(document("_id","$agent_code").append("count",document("$sum",1)),mongoDBQueryHolder.getProjection());
+        assertEquals("orders",mongoDBQueryHolder.getCollection());
+        assertEquals(Arrays.asList("agent_code"),mongoDBQueryHolder.getGroupBys());
+        assertEquals(document("count",document("$gt",1L)),mongoDBQueryHolder.getHaving());
+        assertEquals(document("agent_code",document("$regex","^AW.{1}.*$")),mongoDBQueryHolder.getQuery());
+    }
+
+    @Test
     public void testCountAllGroupByMultipleFields() throws ParseException {
         QueryConverter queryConverter = new QueryConverter("SELECT field_1, field_2,   \n" +
                 "COUNT (*)   \n" +
