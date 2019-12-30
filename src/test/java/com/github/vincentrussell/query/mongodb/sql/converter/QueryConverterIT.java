@@ -218,14 +218,14 @@ public class QueryConverterIT {
                 "\t\"_id\" : \"Manhattan\",\n" +
                 "\t\"count\" : 10259\n" +
                 "},{\n" +
-                "\t\"_id\" : \"Bronx\",\n" +
-                "\t\"count\" : 2338\n" +
+                "\t\"_id\" : \"Brooklyn\",\n" +
+                "\t\"count\" : 6086\n" +
                 "},{\n" +
                 "\t\"_id\" : \"Queens\",\n" +
                 "\t\"count\" : 5656\n" +
                 "},{\n" +
-                "\t\"_id\" : \"Brooklyn\",\n" +
-                "\t\"count\" : 6086\n" +
+                "\t\"_id\" : \"Bronx\",\n" +                
+                "\t\"count\" : 2338\n" +
                 "}]",toJson(results));
     }
 
@@ -258,6 +258,15 @@ public class QueryConverterIT {
     }
 
     @Test
+    public void countGroupByQueryHavingByCount() throws ParseException, IOException {
+        QueryConverter queryConverter = new QueryConverter("select cuisine, count(cuisine) from "+COLLECTION+" WHERE borough = 'Manhattan' GROUP BY cuisine HAVING count > 500");
+        QueryResultIterator<Document> distinctIterable = queryConverter.run(mongoDatabase);
+        queryConverter.write(System.out);
+        List<Document> results = Lists.newArrayList(distinctIterable);
+        assertEquals(4, results.size());
+    }
+
+    @Test
     public void countGroupByQueryLimit() throws ParseException {
         QueryConverter queryConverter = new QueryConverter("select borough, count(borough) from "+COLLECTION+" GROUP BY borough LIMIT 2");
         QueryResultIterator<Document> distinctIterable = queryConverter.run(mongoDatabase);
@@ -285,9 +294,21 @@ public class QueryConverterIT {
         assertEquals("[{\n" +
                 "\t\"_id\" : {\n" +
                 "\t\t\"borough\" : \"Manhattan\",\n" +
+                "\t\t\"cuisine\" : \"Café/Coffee/Tea\"\n" +
+                "\t},\n" +
+                "\t\"count\" : 680\n" +
+                "},{\n" +                
+                "\t\"_id\" : {\n" +
+                "\t\t\"borough\" : \"Manhattan\",\n" +
                 "\t\t\"cuisine\" : \"Chinese\"\n" +
                 "\t},\n" +
                 "\t\"count\" : 510\n" +
+                "},{\n" +
+                "\t\"_id\" : {\n" +
+                "\t\t\"borough\" : \"Queens\",\n" +
+                "\t\t\"cuisine\" : \"Chinese\"\n" +
+                "\t},\n" +
+                "\t\"count\" : 728\n" +
                 "},{\n" +
                 "\t\"_id\" : {\n" +
                 "\t\t\"borough\" : \"Queens\",\n" +
@@ -297,15 +318,9 @@ public class QueryConverterIT {
                 "},{\n" +
                 "\t\"_id\" : {\n" +
                 "\t\t\"borough\" : \"Manhattan\",\n" +
-                "\t\t\"cuisine\" : \"Café/Coffee/Tea\"\n" +
+                "\t\t\"cuisine\" : \"American \"\n" +
                 "\t},\n" +
-                "\t\"count\" : 680\n" +
-                "},{\n" +
-                "\t\"_id\" : {\n" +
-                "\t\t\"borough\" : \"Manhattan\",\n" +
-                "\t\t\"cuisine\" : \"Italian\"\n" +
-                "\t},\n" +
-                "\t\"count\" : 621\n" +
+                "\t\"count\" : 3205\n" +
                 "},{\n" +
                 "\t\"_id\" : {\n" +
                 "\t\t\"borough\" : \"Brooklyn\",\n" +
@@ -314,22 +329,16 @@ public class QueryConverterIT {
                 "\t\"count\" : 1273\n" +
                 "},{\n" +
                 "\t\"_id\" : {\n" +
-                "\t\t\"borough\" : \"Manhattan\",\n" +
-                "\t\t\"cuisine\" : \"American \"\n" +
-                "\t},\n" +
-                "\t\"count\" : 3205\n" +
-                "},{\n" +
-                "\t\"_id\" : {\n" +
-                "\t\t\"borough\" : \"Queens\",\n" +
-                "\t\t\"cuisine\" : \"Chinese\"\n" +
-                "\t},\n" +
-                "\t\"count\" : 728\n" +
-                "},{\n" +
-                "\t\"_id\" : {\n" +
                 "\t\t\"borough\" : \"Brooklyn\",\n" +
                 "\t\t\"cuisine\" : \"Chinese\"\n" +
                 "\t},\n" +
                 "\t\"count\" : 763\n" +
+                "},{\n" +
+                "\t\"_id\" : {\n" +
+                "\t\t\"borough\" : \"Manhattan\",\n" +
+                "\t\t\"cuisine\" : \"Italian\"\n" +
+                "\t},\n" +
+                "\t\"count\" : 621\n" +
                 "}]",toJson(filteredResults));
     }
 
